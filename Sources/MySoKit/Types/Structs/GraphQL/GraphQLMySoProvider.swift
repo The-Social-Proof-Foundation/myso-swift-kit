@@ -541,6 +541,25 @@ public struct GraphQLMySoProvider {
 
     /// Return all Coin objects owned by an address.
     /// - Parameters:
+    ///   - account: Wallet address whose coins are to be retrieved.
+    ///   - cursor: Optional. A cursor for pagination.
+    ///   - limit: Optional. A limit on the number of coins to be retrieved.
+    /// - Throws: `MySoError` if there is any error in the JSON RPC call or the response.
+    /// - Returns: A `PaginatedCoins` object containing the retrieved coins and pagination information.
+    public func getAllCoins(
+        account: String,
+        cursor: String? = nil,
+        limit: UInt? = nil
+    ) async throws -> PaginatedCoins {
+        try await self.getCoins(
+            account: account,
+            cursor: cursor,
+            limit: limit
+        )
+    }
+
+    /// Return all Coin objects owned by an address.
+    /// - Parameters:
     ///   - account: Any object conforming to `PublicKeyProtocol` whose associated coins are to be retrieved.
     ///   - cursor: Optional. A cursor for pagination.
     ///   - limit: Optional. A limit on the number of coins to be retrieved.
@@ -551,7 +570,7 @@ public struct GraphQLMySoProvider {
         cursor: String? = nil,
         limit: UInt? = nil
     ) async throws -> PaginatedCoins {
-        return try await self.getCoins(
+        try await self.getAllCoins(
             account: try account.toMySoAddress(),
             cursor: cursor,
             limit: limit

@@ -750,20 +750,20 @@ public struct MySoProvider {
 
     /// Return all Coin objects owned by an address.
     /// - Parameters:
-    ///   - account: Any object conforming to `PublicKeyProtocol` whose associated coins are to be retrieved.
+    ///   - account: Wallet address whose coins are to be retrieved.
     ///   - cursor: Optional. A cursor for pagination.
     ///   - limit: Optional. A limit on the number of coins to be retrieved.
     /// - Throws: `MySoError` if there is any error in the JSON RPC call or the response.
     /// - Returns: A `PaginatedCoins` object containing the retrieved coins and pagination information.
     public func getAllCoins(
-        account: any PublicKeyProtocol,
+        account: String,
         cursor: String? = nil,
         limit: UInt? = nil
     ) async throws -> PaginatedCoins {
         let data = try await JsonRpcClient.sendMySoJsonRpc(
             try self.getServerUrl(),
             MySoRequest("mysox_getAllCoins", [
-                AnyCodable(try account.toMySoAddress()),
+                AnyCodable(account),
                 AnyCodable(cursor),
                 AnyCodable(limit)
             ])
@@ -788,6 +788,25 @@ public struct MySoProvider {
             data: coinPages,
             nextCursor: result["nextCursor"].stringValue,
             hasNextPage: result["hasNextPage"].boolValue
+        )
+    }
+
+    /// Return all Coin objects owned by an address.
+    /// - Parameters:
+    ///   - account: Any object conforming to `PublicKeyProtocol` whose associated coins are to be retrieved.
+    ///   - cursor: Optional. A cursor for pagination.
+    ///   - limit: Optional. A limit on the number of coins to be retrieved.
+    /// - Throws: `MySoError` if there is any error in the JSON RPC call or the response.
+    /// - Returns: A `PaginatedCoins` object containing the retrieved coins and pagination information.
+    public func getAllCoins(
+        account: any PublicKeyProtocol,
+        cursor: String? = nil,
+        limit: UInt? = nil
+    ) async throws -> PaginatedCoins {
+        try await getAllCoins(
+            account: try account.toMySoAddress(),
+            cursor: cursor,
+            limit: limit
         )
     }
 
