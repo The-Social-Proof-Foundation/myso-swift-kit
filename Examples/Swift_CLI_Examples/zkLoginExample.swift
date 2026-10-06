@@ -53,11 +53,11 @@ class ZkLoginExample {
         switch network {
         case .devnet:
             self.networkUrl = URL(string: "https://fullnode.testnet.mysocial.network:443")!
-            self.proofServiceUrl = proofServiceUrl ?? URL(string: "https://zklogin-prover-testnet.up.railway.app/v1")!
+            self.proofServiceUrl = proofServiceUrl ?? URL(string: "https://prover.testnet.mysocial.network/v1")!
             self.saltServiceUrl = saltServiceUrl ?? URL(string: "https://salt.testnet.mysocial.network/get_salt")!
         case .testnet:
             self.networkUrl = URL(string: "https://fullnode.testnet.mysocial.network:443")!
-            self.proofServiceUrl = proofServiceUrl ?? URL(string: "https://zklogin-prover-testnet.up.railway.app/v1")!
+            self.proofServiceUrl = proofServiceUrl ?? URL(string: "https://prover.testnet.mysocial.network/v1")!
             self.saltServiceUrl = saltServiceUrl ?? URL(string: "https://salt.testnet.mysocial.network/get_salt")!
         case .mainnet:
             self.networkUrl = URL(string: "https://fullnode.mainnet.mysocial.network:443")!

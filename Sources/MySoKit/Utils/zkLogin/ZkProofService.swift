@@ -137,9 +137,9 @@ public class RemoteZkProofService: ZkProofService {
         }
 
         let proofPoints = zkLoginSignatureInputsProofPoints(
-            aStrings: aPoints,
-            bStrings: bPointsArray,
-            cStrings: cPoints
+            a: aPoints,
+            b: bPointsArray,
+            c: cPoints
         )
 
         // Extract header Base64

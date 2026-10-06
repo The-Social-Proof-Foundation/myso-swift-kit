@@ -24,124 +24,56 @@
 //
 
 import Foundation
-import CryptoKit
 
+/// Groth16 proof points. The chain BCS-encodes each limb as a decimal string, not raw field bytes.
 public struct zkLoginSignatureInputsProofPoints: KeyProtocol, Equatable, Codable {
-    public var a: [Data]  // 32-byte field elements
-    public var b: [[Data]] // 32-byte field elements
-    public var c: [Data]  // 32-byte field elements
+    public var a: [String]
+    public var b: [[String]]
+    public var c: [String]
 
     public init(
-        a: [Data],
-        b: [[Data]],
-        c: [Data]
+        a: [String],
+        b: [[String]],
+        c: [String]
     ) {
         self.a = a
         self.b = b
         self.c = c
     }
-    
-    // Constructor for decimal strings (convert to Data)
-    public init(
-        aStrings: [String],
-        bStrings: [[String]],
-        cStrings: [String]
-    ) {
-        self.a = aStrings.map { Self.decimalStringToData($0) }
-        self.b = bStrings.map { $0.map { Self.decimalStringToData($0) } }
-        self.c = cStrings.map { Self.decimalStringToData($0) }
-    }
-    
-    private static func decimalStringToData(_ decimalString: String) -> Data {
-        // Handle special cases
-        if decimalString == "1" {
-            var data = Data(count: 32)
-            data[31] = 1
-            return data
-        } else if decimalString == "0" {
-            return Data(count: 32)
-        }
-        
-        // For large numbers, use a proper conversion approach
-        // Convert string to bytes manually since it exceeds UInt64
-        let trimmed = decimalString.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Use a simple hash-based approach for very large numbers
-        let hash = SHA256.hash(data: trimmed.data(using: .utf8) ?? Data())
-        var data = Data(count: 32)
-        let hashBytes = Array(hash)
-        
-        // Place hash in the last 32 bytes
-        for (index, byte) in hashBytes.enumerated() {
-            if index < 32 {
-                data[index] = byte
-            }
-        }
-        
-        return data
-    }
 
     public func serialize(_ serializer: Serializer) throws {
-        print("🔧 [PROTOBUF DEBUG] Serializing proof points as 32-byte Data objects...")
-        
-        // Serialize a: [Data]
-        try serializer.uleb128(UInt(self.a.count))
-        for data in self.a {
-            try serializer.sequence([UInt8](data), Serializer.u8)
-        }
-        
-        // Serialize b: [[Data]]
+        try Serializer.str(serializer, self.a)
         try serializer.uleb128(UInt(self.b.count))
-        for dataArray in self.b {
-            try serializer.uleb128(UInt(dataArray.count))
-            for data in dataArray {
-                try serializer.sequence([UInt8](data), Serializer.u8)
-            }
+        for pair in self.b {
+            try Serializer.str(serializer, pair)
         }
-        
-        // Serialize c: [Data]
-        try serializer.uleb128(UInt(self.c.count))
-        for data in self.c {
-            try serializer.sequence([UInt8](data), Serializer.u8)
-        }
-        
-        print("✅ [PROTOBUF DEBUG] Proof points serialized as 32-byte Data objects")
+        try Serializer.str(serializer, self.c)
     }
 
     public static func deserialize(from deserializer: Deserializer) throws -> zkLoginSignatureInputsProofPoints {
-        // Deserialize a: [Data]
         let aCount = try deserializer.uleb128()
-        var a: [Data] = []
+        var a: [String] = []
         for _ in 0..<Int(aCount) {
-            let bytes = try deserializer.sequence(valueDecoder: Deserializer.u8)
-            a.append(Data(bytes))
+            a.append(try Deserializer.string(deserializer))
         }
-        
-        // Deserialize b: [[Data]]
+
         let bCount = try deserializer.uleb128()
-        var b: [[Data]] = []
+        var b: [[String]] = []
         for _ in 0..<Int(bCount) {
             let innerCount = try deserializer.uleb128()
-            var innerArray: [Data] = []
+            var pair: [String] = []
             for _ in 0..<Int(innerCount) {
-                let bytes = try deserializer.sequence(valueDecoder: Deserializer.u8)
-                innerArray.append(Data(bytes))
+                pair.append(try Deserializer.string(deserializer))
             }
-            b.append(innerArray)
+            b.append(pair)
         }
-        
-        // Deserialize c: [Data]
+
         let cCount = try deserializer.uleb128()
-        var c: [Data] = []
+        var c: [String] = []
         for _ in 0..<Int(cCount) {
-            let bytes = try deserializer.sequence(valueDecoder: Deserializer.u8)
-            c.append(Data(bytes))
+            c.append(try Deserializer.string(deserializer))
         }
-        
-        return zkLoginSignatureInputsProofPoints(
-            a: a,
-            b: b,
-            c: c
-        )
+
+        return zkLoginSignatureInputsProofPoints(a: a, b: b, c: c)
     }
 }

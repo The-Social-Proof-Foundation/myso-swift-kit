@@ -125,9 +125,7 @@ public struct zkLoginSignature: KeyProtocol, Equatable {
         // Read headerBase64
         let headerBase64 = try Deserializer.string(deserializer)
 
-        // Read addressSeed (now as Data bytes)
-        let addressSeedBytes = try deserializer.sequence(valueDecoder: Deserializer.u8)
-        let addressSeed = Data(addressSeedBytes)
+        let addressSeed = try Deserializer.string(deserializer)
 
         // Create inputs struct
         let inputs = zkLoginSignatureInputs(

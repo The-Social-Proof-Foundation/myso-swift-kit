@@ -24,53 +24,25 @@
 //
 
 import Foundation
-import CryptoKit
 
 /// Represents the inputs for a zkLogin signature
 public struct zkLoginSignatureInputs: KeyProtocol, Equatable, Codable {
     public var proofPoints: zkLoginSignatureInputsProofPoints
     public var issBase64Details: zkLoginSignatureInputsClaim
     public var headerBase64: String
-    public var addressSeed: Data  // Changed from String to Data for large numbers
+    /// Decimal address seed. The chain BCS-encodes this as a string.
+    public var addressSeed: String
 
     public init(
         proofPoints: zkLoginSignatureInputsProofPoints,
         issBase64Details: zkLoginSignatureInputsClaim,
         headerBase64: String,
-        addressSeed: Data
+        addressSeed: String
     ) {
         self.proofPoints = proofPoints
         self.issBase64Details = issBase64Details
         self.headerBase64 = headerBase64
         self.addressSeed = addressSeed
-    }
-    
-    // Constructor for string addressSeed (convert to Data)
-    public init(
-        proofPoints: zkLoginSignatureInputsProofPoints,
-        issBase64Details: zkLoginSignatureInputsClaim,
-        headerBase64: String,
-        addressSeedString: String
-    ) {
-        self.proofPoints = proofPoints
-        self.issBase64Details = issBase64Details
-        self.headerBase64 = headerBase64
-        self.addressSeed = Self.addressSeedStringToData(addressSeedString)
-    }
-    
-    private static func addressSeedStringToData(_ addressSeed: String) -> Data {
-        // Convert large decimal string to 32-byte Data using hash
-        let hash = SHA256.hash(data: addressSeed.data(using: .utf8) ?? Data())
-        var data = Data(count: 32)
-        let hashBytes = Array(hash)
-        
-        for (index, byte) in hashBytes.enumerated() {
-            if index < 32 {
-                data[index] = byte
-            }
-        }
-        
-        return data
     }
 
     public func serialize(_ serializer: Serializer) throws {
@@ -87,10 +59,7 @@ public struct zkLoginSignatureInputs: KeyProtocol, Equatable, Codable {
         try Serializer.str(serializer, self.headerBase64)
         print("✅ [INPUTS DEBUG] headerBase64 serialized")
         
-        print("🔧 [INPUTS DEBUG] About to serialize addressSeed as 32-byte Data...")
-        // Serialize addressSeed as 32-byte Data directly
-        try serializer.sequence([UInt8](self.addressSeed), Serializer.u8)
-        print("✅ [INPUTS DEBUG] addressSeed serialized as 32-byte Data")
+        try Serializer.str(serializer, self.addressSeed)
         print("✅ [INPUTS DEBUG] zkLoginSignatureInputs.serialize() completed")
     }
 
@@ -98,8 +67,7 @@ public struct zkLoginSignatureInputs: KeyProtocol, Equatable, Codable {
         let proofPoints = try zkLoginSignatureInputsProofPoints.deserialize(from: deserializer)
         let issBase64Details = try zkLoginSignatureInputsClaim.deserialize(from: deserializer)
         let headerBase64 = try Deserializer.string(deserializer)
-        let addressSeedBytes = try deserializer.sequence(valueDecoder: Deserializer.u8)
-        let addressSeed = Data(addressSeedBytes)
+        let addressSeed = try Deserializer.string(deserializer)
         
         return zkLoginSignatureInputs(
             proofPoints: proofPoints,

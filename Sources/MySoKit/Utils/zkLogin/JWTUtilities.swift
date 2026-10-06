@@ -124,9 +124,9 @@ public struct JWTUtilities {
 
         return zkLoginSignatureInputs(
             proofPoints: zkLoginSignatureInputsProofPoints(
-                aStrings: proofPoints["a"].arrayValue.map { $0.stringValue },
-                bStrings: proofPoints["b"].arrayValue.map { $0.arrayValue.map { $0.stringValue } },
-                cStrings: proofPoints["c"].arrayValue.map { $0.stringValue }
+                a: proofPoints["a"].arrayValue.map { $0.stringValue },
+                b: proofPoints["b"].arrayValue.map { $0.arrayValue.map { $0.stringValue } },
+                c: proofPoints["c"].arrayValue.map { $0.stringValue }
             )
             ,
             issBase64Details: zkLoginSignatureInputsClaim(
@@ -134,7 +134,7 @@ public struct JWTUtilities {
                 indexMod4: issBase64Details["indexMod4"].uInt8Value
             ),
             headerBase64: headerBase64,
-            addressSeedString: addressSeed
+            addressSeed: addressSeed
         )
     }
 

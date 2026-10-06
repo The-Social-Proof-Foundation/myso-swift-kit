@@ -282,7 +282,7 @@ class ZkLoginExample {
     init() {
         self.provider = MySoProvider(url: URL(string: "https://fullnode.testnet.mysocial.network:443")!)
         self.authenticator = ZkLoginAuthenticator(provider: provider)
-        self.proofService = RemoteZkProofService(url: URL(string: "https://zklogin-prover-testnet.up.railway.app/v1")!)
+        self.proofService = RemoteZkProofService(url: URL(string: "https://prover.testnet.mysocial.network/v1")!)
     }
     
     func performzkLoginAuthentication() async throws {
@@ -511,7 +511,7 @@ zkLogin works across different MySo networks (devnet, testnet, mainnet). Configu
 ```swift
 // Testnet
 let provider = MySoProvider(url: URL(string: "https://fullnode.testnet.mysocial.network:443")!)
-let proofService = RemoteZkProofService(url: URL(string: "https://zklogin-prover-testnet.up.railway.app/v1")!)
+let proofService = RemoteZkProofService(url: URL(string: "https://prover.testnet.mysocial.network/v1")!)
 
 // Mainnet
 let provider = MySoProvider(url: URL(string: "https://fullnode.mainnet.mysocial.network:443")!)
