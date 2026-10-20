@@ -14,6 +14,10 @@ let package = Package(
             name: "MyDataCrypto",
             targets: ["MyDataCrypto"]
         ),
+        .library(
+            name: "MySoContra",
+            targets: ["MySoContra"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/MarcoDotIO/UInt256.git", from: "1.0.0"),
@@ -100,6 +104,16 @@ let package = Package(
                 .copy("Resources/serializer.json"),
                 .copy("Resources/serializer-upgrade.json")
             ]
+        ),
+        .binaryTarget(
+            name: "MySoContraFFI",
+            url: "https://pub-1f3749a8084a44c3abbd97a4875268a1.r2.dev/MySoContraFFI.xcframework.zip",
+            checksum: "ba88b439395db76c79d9bf806269736de46026b81a161a7e45756938c6d714ef"
+        ),
+        .target(
+            name: "MySoContra",
+            dependencies: ["MySoContraFFI"],
+            path: "Sources/MySoContra"
         ),
         .testTarget(
             name: "MyDataCryptoTests",
