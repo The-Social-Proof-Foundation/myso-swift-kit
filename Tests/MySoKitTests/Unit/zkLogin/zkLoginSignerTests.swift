@@ -328,4 +328,34 @@ final class ZkLoginSignerTests: XCTestCase {
             XCTAssertTrue(error is MySoError)
         }
     }
+
+    // MARK: - Personal message format
+
+    /// The inner ephemeral signature must be a standard personal-message signature
+    /// (blake2b(PersonalMessage intent || bcs(message))), or the chain rejects it. Offline.
+    func testSignPersonalMessageInnerSignatureVerifiesAsPersonalMessage() throws {
+        let ephemeral = try Account(accountType: .ed25519)
+        let signer = ZkLoginSigner(
+            provider: MySoProvider(connection: DevnetConnection()),
+            ephemeralKeyPair: ephemeral,
+            zkLoginSignature: zkLoginSignature(inputs: aSignatureInputs, maxEpoch: 174, userSignature: []),
+            userAddress: "0x1234567890abcdef1234567890abcdef12345678"
+        )
+        let message: [UInt8] = Array("1793684436:0xcab123".utf8)
+
+        let serialized = try signer.signPersonalMessage(message)
+        let parsed = try zkLoginSignature.parse(serialized: serialized)
+        let inner = parsed.userSignature
+        // flag (1) || signature (64) || ed25519 public key (32)
+        XCTAssertEqual(inner.count, 97)
+        XCTAssertEqual(inner.first, 0x00)
+        let signature = Signature(
+            signature: Data(inner[1..<65]),
+            publickey: Data(inner[65..<97]),
+            signatureScheme: .ED25519
+        )
+        XCTAssertTrue(try ephemeral.publicKey.verifyPersonalMessage(message, signature))
+        XCTAssertFalse(try ephemeral.publicKey.verifyPersonalMessage(Array("other".utf8), signature))
+        XCTAssertEqual(parsed.maxEpoch, 174)
+    }
 }

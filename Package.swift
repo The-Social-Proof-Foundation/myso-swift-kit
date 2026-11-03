@@ -108,7 +108,7 @@ let package = Package(
         .binaryTarget(
             name: "MySoContraFFI",
             url: "https://pub-1f3749a8084a44c3abbd97a4875268a1.r2.dev/MySoContraFFI.xcframework.zip",
-            checksum: "ba88b439395db76c79d9bf806269736de46026b81a161a7e45756938c6d714ef"
+            checksum: "653727eb38db4d96257c0314aa4996c27579cb1285a4bb80cddd16cb3b086bcf"
         ),
         .target(
             name: "MySoContra",

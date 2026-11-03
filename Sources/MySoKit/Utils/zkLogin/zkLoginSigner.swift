@@ -92,8 +92,12 @@ public class ZkLoginSigner {
     /// - Returns: A complete zkLogin signature
     private func signBytes(_ bytes: [UInt8]) throws -> zkLoginSignature {
         // Sign blake2b(intent || tx bytes), then wrap flag || signature || raw public key.
-        // toMySoBytes() already includes a scheme flag and must not be appended again.
-        let ephemeralSignature = try ephemeralKeyPair.signTransactionBlock(bytes)
+        try wrapEphemeralSignature(try ephemeralKeyPair.signTransactionBlock(bytes))
+    }
+
+    /// Wrap an ephemeral signature (flag || signature || raw public key) in the proof template.
+    /// toMySoBytes() already includes a scheme flag and must not be appended again.
+    private func wrapEphemeralSignature(_ ephemeralSignature: Signature) throws -> zkLoginSignature {
         let serialized = try ephemeralKeyPair.toSerializedSignature(ephemeralSignature)
         guard let userSignature = Data(base64Encoded: serialized) else {
             throw MySoError.customError(message: "Failed to encode the zkLogin user signature.")
@@ -115,10 +119,11 @@ public class ZkLoginSigner {
     /// - Parameter message: The message bytes to sign
     /// - Returns: A serialized zkLogin signature string
     public func signPersonalMessage(_ message: [UInt8]) throws -> String {
-        // For personal messages, we need to add the personal message prefix
-        let messageWithPrefix = RawSigner.messageWithIntent(.PersonalMessage, Data(message))
-        let signature = try signBytes([UInt8](messageWithPrefix))
-        return try signature.getSignature()
+        // Chain personal-message format: blake2b(PersonalMessage intent || bcs(message)), the same
+        // as a plain key's signPersonalMessage. (Previously this re-signed the message under the
+        // TransactionData intent with a second intent prefix, which never verified on chain.)
+        let ephemeralSignature = try ephemeralKeyPair.signPersonalMessage(message)
+        return try wrapEphemeralSignature(ephemeralSignature).getSignature()
     }
 
     /// Sign and execute a transaction using zkLogin authentication
