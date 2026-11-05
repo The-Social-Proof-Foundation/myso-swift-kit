@@ -46,21 +46,10 @@ public struct zkLoginSignatureInputs: KeyProtocol, Equatable, Codable {
     }
 
     public func serialize(_ serializer: Serializer) throws {
-        print("🔧 [INPUTS DEBUG] zkLoginSignatureInputs.serialize() called")
-        print("🔧 [INPUTS DEBUG] About to serialize proof points...")
         try Serializer._struct(serializer, value: self.proofPoints)
-        print("✅ [INPUTS DEBUG] Proof points serialized")
-        
-        print("🔧 [INPUTS DEBUG] About to serialize issBase64Details...")
         try Serializer._struct(serializer, value: self.issBase64Details)
-        print("✅ [INPUTS DEBUG] issBase64Details serialized")
-        
-        print("🔧 [INPUTS DEBUG] About to serialize headerBase64...")
         try Serializer.str(serializer, self.headerBase64)
-        print("✅ [INPUTS DEBUG] headerBase64 serialized")
-        
         try Serializer.str(serializer, self.addressSeed)
-        print("✅ [INPUTS DEBUG] zkLoginSignatureInputs.serialize() completed")
     }
 
     public static func deserialize(from deserializer: Deserializer) throws -> zkLoginSignatureInputs {

@@ -23,8 +23,8 @@
 //  THE SOFTWARE.
 //
 
+import CryptoKit
 import Foundation
-import ed25519swift
 import Blake2
 
 /// Represents a public key used in the ED25519 signature scheme.
@@ -78,12 +78,20 @@ public struct ED25519PublicKey: Equatable, PublicKeyProtocol {
         return "0x\(self.key.hexEncodedString())"
     }
 
+    /// RFC 8032 public key for a 32-byte seed via CryptoKit (kept here: the private-key file
+    /// imports CryptoSwift, whose `HMAC` clashes with CryptoKit's).
+    static func derived(fromSeed seed: Data) -> ED25519PublicKey? {
+        guard let key = try? Curve25519.Signing.PrivateKey(rawRepresentation: seed) else { return nil }
+        return try? ED25519PublicKey(data: key.publicKey.rawRepresentation)
+    }
+
+    /// CryptoKit (BoringSSL) verify — same RFC 8032 result as the pure-Swift ed25519swift
+    /// port, but orders of magnitude faster (that port dominated chat-open CPU in Instruments).
     public func verify(data: Data, signature: Signature) throws -> Bool {
-        return Ed25519.verify(
-            signature: [UInt8](signature.signature),
-            message: [UInt8](data),
-            publicKey: [UInt8](self.key)
-        )
+        guard signature.signature.count == 64,
+              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: self.key)
+        else { return false }
+        return key.isValidSignature(signature.signature, for: data)
     }
 
     public func toMySoAddress() throws -> String {

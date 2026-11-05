@@ -101,7 +101,12 @@ public struct ED25519PrivateKey: Equatable, PrivateKeyProtocol {
         return self.key.base64EncodedString()
     }
 
+    /// CryptoKit derives the identical RFC 8032 public key from the 32-byte seed, much faster
+    /// than the pure-Swift scalar multiply. Signing stays on ed25519swift (deterministic).
     public func publicKey() throws -> PublicKeyType {
+        if let derived = ED25519PublicKey.derived(fromSeed: self.key) {
+            return derived
+        }
         let key = Ed25519.calcPublicKey(secretKey: [UInt8](self.key))
         return try ED25519PublicKey(data: Data(key))
     }
