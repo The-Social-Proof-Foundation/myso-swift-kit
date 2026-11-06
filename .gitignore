@@ -99,3 +99,5 @@ Package.resolved
 # Contra prover binary. Hosted on R2; over GitHub's 100MB file limit.
 Frameworks/MySoContraFFI.xcframework/
 MySoContraFFI.xcframework.zip
+# Built by myso-messaging-stack/mls/scripts/build-xcframework.sh
+Frameworks/MySoMLSFFI.xcframework/
