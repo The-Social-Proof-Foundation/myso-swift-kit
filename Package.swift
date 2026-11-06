@@ -18,6 +18,10 @@ let package = Package(
             name: "MySoContra",
             targets: ["MySoContra"]
         ),
+        .library(
+            name: "MySoMLS",
+            targets: ["MySoMLS"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/MarcoDotIO/UInt256.git", from: "1.0.0"),
@@ -114,6 +118,17 @@ let package = Package(
             name: "MySoContra",
             dependencies: ["MySoContraFFI"],
             path: "Sources/MySoContra"
+        ),
+        // MLS (E2EE M6): OpenMLS via myso-messaging-stack/mls. Built locally by
+        // `mls/scripts/build-xcframework.sh`; release builds switch to a hosted zip + checksum.
+        .binaryTarget(
+            name: "MySoMLSFFI",
+            path: "Frameworks/MySoMLSFFI.xcframework"
+        ),
+        .target(
+            name: "MySoMLS",
+            dependencies: ["MySoMLSFFI"],
+            path: "Sources/MySoMLS"
         ),
         .testTarget(
             name: "MyDataCryptoTests",

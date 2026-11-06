@@ -777,9 +777,16 @@ public class TransactionBlock {
                     continue
                 }
 
-                let isByValue =
-                    objectToResolve.normalizedType != nil &&
-                    objectToResolve.normalizedType!.extractStructTag() == nil
+                // By value = a bare struct parameter (`post: Post`), not `&T` / `&mut T`. A shared
+                // object taken by value (delete / unwrap) must be sent as mutable, or execution
+                // fails with `InvalidObjectByValue`. (`extractStructTag()` also returns the struct
+                // for references, so it can't tell by-value apart; the old `== nil` check was
+                // inverted and marked every by-value shared input read-only.)
+                let isByValue: Bool = {
+                    guard let normalized = objectToResolve.normalizedType else { return false }
+                    if case .structure = normalized { return true }
+                    return false
+                }()
 
                 // Set mutable based on the normalized type of the object to resolve
                 let mutable = isByValue || (
