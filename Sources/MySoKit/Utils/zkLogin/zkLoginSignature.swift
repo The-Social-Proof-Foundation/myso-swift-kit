@@ -185,15 +185,15 @@ public class MySoGraphQLClient: GraphQLClientProtocol {
     ) async throws -> ZkLoginVerifyResult {
         // Construct GraphQL query matching the schema
         let query = """
-        query verifyZkLoginSignature($bytes: Base64!, $signature: Base64!, $intentScope: ZkLoginIntentScope!, $author: MysAddress!) {
-          verifyZkloginSignature(
+        query verifyZkLoginSignature($bytes: Base64!, $signature: Base64!, $intentScope: ZkLoginIntentScope!, $author: MySoAddress!) {
+          verifyZkLoginSignature(
             bytes: $bytes,
             signature: $signature,
             intentScope: $intentScope,
             author: $author
           ) {
             success
-            errors
+            error
           }
         }
         """
@@ -239,12 +239,13 @@ public class MySoGraphQLClient: GraphQLClientProtocol {
 
         // Extract verification result
         guard let dataJson = json["data"] as? [String: Any],
-              let verifyResult = dataJson["verifyZkloginSignature"] as? [String: Any],
+              let verifyResult = dataJson["verifyZkLoginSignature"] as? [String: Any],
               let success = verifyResult["success"] as? Bool else {
             throw MySoError.customError(message: "Invalid GraphQL response format")
         }
 
-        let errors = (verifyResult["errors"] as? [String]) ?? []
+        // Schema: `error: String` (nullable), not a list.
+        let errors = (verifyResult["error"] as? String).map { [$0] } ?? []
 
         return ZkLoginVerifyResult(success: success, errors: errors)
     }

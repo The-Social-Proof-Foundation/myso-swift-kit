@@ -33,9 +33,35 @@ public enum MessagingMessageAAD {
 	}
 }
 
+/// Attachment AAD v1 — mirrors myso-messaging-stack `buildAttachmentAad`.
+/// Layout: `MessagingMessageAAD(groupId, keyVersion, sender) || UTF-8("myso-attachment-v1:" + role)`.
+/// Binds file bytes, metadata and video posters to the parent message's group, key version
+/// and sender, so a blob cannot be re-posted under another sender's message.
+public enum MessagingAttachmentAAD {
+	public enum Role: String, Sendable {
+		case data
+		case meta
+		case poster
+	}
+
+	public static let labelV1 = "myso-attachment-v1:"
+
+	public static func build(groupId: Data, keyVersion: UInt64, senderAddress: Data, role: Role) throws -> Data {
+		var out = try MessagingMessageAAD.build(groupId: groupId, keyVersion: keyVersion, senderAddress: senderAddress)
+		out.append(Data((labelV1 + role.rawValue).utf8))
+		return out
+	}
+
+	public static func build(groupIdHex: String, keyVersion: UInt64, senderAddressHex: String, role: Role) throws -> Data {
+		var out = try MessagingMessageAAD.build(groupIdHex: groupIdHex, keyVersion: keyVersion, senderAddressHex: senderAddressHex)
+		out.append(Data((labelV1 + role.rawValue).utf8))
+		return out
+	}
+}
+
 /// AES-GCM message encrypt — ciphertext layout matches WebCrypto (`ciphertext||tag`).
 public enum MessagingEnvelopeEncrypt {
-	/// - Parameter aad: Message text uses AAD; attachment blobs pass `nil`.
+	/// - Parameter aad: Message text uses `MessagingMessageAAD`; attachments use `MessagingAttachmentAAD` (legacy attachments: `nil`).
 	public static func encrypt(
 		dek: Data,
 		plaintext: Data,
@@ -65,7 +91,7 @@ public enum MessagingEnvelopeEncrypt {
 
 /// AES-GCM message decrypt (relayer ciphertext) using DEK + optional AAD.
 public enum MessagingEnvelopeDecrypt {
-	/// - Parameter aad: Message text uses AAD; attachment blobs pass `nil`.
+	/// - Parameter aad: Message text uses `MessagingMessageAAD`; attachments use `MessagingAttachmentAAD` (legacy attachments: `nil`).
 	public static func decrypt(
 		dek: Data,
 		ciphertext: Data,

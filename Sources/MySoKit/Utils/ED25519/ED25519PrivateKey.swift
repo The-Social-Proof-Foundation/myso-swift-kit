@@ -111,7 +111,24 @@ public struct ED25519PrivateKey: Equatable, PrivateKeyProtocol {
         return try ED25519PublicKey(data: Data(key))
     }
 
+    /// Opt-in: sign with CryptoKit instead of the pure-Swift ed25519swift port. Signatures stay
+    /// valid RFC 8032 Ed25519 (the chain and every verifier accept them) but CryptoKit randomizes
+    /// the nonce, so bytes are no longer deterministic. Off by default so SDK test vectors and
+    /// any byte-for-byte parity checks keep passing; apps flip it on at launch for speed.
+    /// Set once at launch, before any signing.
+    nonisolated(unsafe) public static var usesFastNondeterministicSigning = false
+
     public func sign(data: Data) throws -> Signature {
+        // Fast path: CryptoKit. The ed25519swift port dominated messaging CPU in Instruments
+        // (`Ed25519.sign` + its internal `calcPublicKey` on every relayer request).
+        if Self.usesFastNondeterministicSigning,
+           let fast = ED25519PublicKey.cryptoKitSignature(seed: self.key, message: data) {
+            return Signature(
+                signature: fast,
+                publickey: try self.publicKey().key,
+                signatureScheme: .ED25519
+            )
+        }
         let signedMessage = Ed25519.sign(message: [UInt8](data), secretKey: [UInt8](self.key))
         return Signature(
             signature: Data(signedMessage),

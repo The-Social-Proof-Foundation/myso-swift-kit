@@ -18,6 +18,10 @@ let package = Package(
             name: "MySoContra",
             targets: ["MySoContra"]
         ),
+        .library(
+            name: "MySoMLS",
+            targets: ["MySoMLS"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/MarcoDotIO/UInt256.git", from: "1.0.0"),
@@ -107,13 +111,24 @@ let package = Package(
         ),
         .binaryTarget(
             name: "MySoContraFFI",
-            url: "https://pub-1f3749a8084a44c3abbd97a4875268a1.r2.dev/MySoContraFFI.xcframework.zip",
-            checksum: "653727eb38db4d96257c0314aa4996c27579cb1285a4bb80cddd16cb3b086bcf"
+            url: "https://pub-1f3749a8084a44c3abbd97a4875268a1.r2.dev/MySoContraFFI-2.xcframework.zip",
+            checksum: "cc078b42d3289e660e0d2a281fb70d3bb970699e762b238b4728cdf01345b78b"
         ),
         .target(
             name: "MySoContra",
             dependencies: ["MySoContraFFI"],
             path: "Sources/MySoContra"
+        ),
+        // MLS (E2EE M6): OpenMLS via myso-messaging-stack/mls. Built locally by
+        // `mls/scripts/build-xcframework.sh`; release builds switch to a hosted zip + checksum.
+        .binaryTarget(
+            name: "MySoMLSFFI",
+            path: "Frameworks/MySoMLSFFI.xcframework"
+        ),
+        .target(
+            name: "MySoMLS",
+            dependencies: ["MySoMLSFFI"],
+            path: "Sources/MySoMLS"
         ),
         .testTarget(
             name: "MyDataCryptoTests",

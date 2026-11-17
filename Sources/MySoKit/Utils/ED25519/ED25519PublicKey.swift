@@ -85,6 +85,18 @@ public struct ED25519PublicKey: Equatable, PublicKeyProtocol {
         return try? ED25519PublicKey(data: key.publicKey.rawRepresentation)
     }
 
+    /// CryptoKit (BoringSSL) Ed25519 signature for a 32-byte seed. Valid RFC 8032 (verifies
+    /// anywhere), orders of magnitude faster than the pure-Swift port, which also re-derives the
+    /// public key on every sign. CryptoKit randomizes the nonce, so bytes differ per call; nothing
+    /// may rely on signatures being deterministic.
+    static func cryptoKitSignature(seed: Data, message: Data) -> Data? {
+        guard seed.count == 32,
+              let key = try? Curve25519.Signing.PrivateKey(rawRepresentation: seed),
+              let signature = try? key.signature(for: message)
+        else { return nil }
+        return signature
+    }
+
     /// CryptoKit (BoringSSL) verify — same RFC 8032 result as the pure-Swift ed25519swift
     /// port, but orders of magnitude faster (that port dominated chat-open CPU in Instruments).
     public func verify(data: Data, signature: Signature) throws -> Bool {
